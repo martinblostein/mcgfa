@@ -1,0 +1,7 @@
+useDynLib(mcgfa)
+export(mcgfa)
+import(stats)
+importFrom("graphics", "pairs")
+importFrom("utils", "capture.output", "setTxtProgressBar","txtProgressBar")
+S3method(predict,mcgfa)
+S3method(plot,mcgfa)
