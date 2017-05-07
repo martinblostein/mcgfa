@@ -245,7 +245,7 @@ mcgfa <- function(
     # DETERMINE BEST MODEL BY BIC #
     # --------------------------- #
 
-    best.ind = which(BIC==max(BIC,na.rm=T),arr.ind=T)
+    best.ind = which(BIC==max(BIC[!is.infinite(BIC) & !is.na(BIC)]),arr.ind=T)
     best.ind = best.ind[1,]
     best.fit = fits[[best.ind]]
 
