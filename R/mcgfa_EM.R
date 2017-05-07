@@ -35,7 +35,7 @@ mcgfa_EM <- function(
     class_ind = if (!is.null(known) && (!all(known==0))) 1 else 0
 
     # parameter initialization/allocation
-    v = array(1,c(N,G))
+    v = array(0.99,c(N,G))
     mu = array(0,c(p,G))
     alpha = numeric(G)
     eta = rep(1.01,G)
