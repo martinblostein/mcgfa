@@ -1,10 +1,10 @@
 Package: mcgfa
-Version: 1.0.0
+Version: 1.1.0
 Type: Package
 Title: Mixtures of Contaminated Gaussian Factor Analyzers
 Authors@R: c(person("Martin", "Blostein", role = c("aut", "cre"), email="martin.blostein@gmail.com"),
-             person("Antonio", "Punzo", role = "ctb"),
-             person(c("Paul", "D."), "McNicholas", role = c("ctb","ths")))
+             person("Antonio", "Punzo", role = "aut"),
+             person(c("Paul", "D."), "McNicholas", role = c("aut","ths")))
 Description: Performs clustering and classification using the Mixtures of Contaminated Gaussian Factor Analyzers model. Allows for automatic detection of outliers and noise.
 Imports: stats, pgmm, parallel
 License: GPL (>= 2)
