@@ -1,30 +1,30 @@
 // AECM algorithms
 
 double aecm_CCC(double *z, double *x, double *v, int cls_ind, int* cls, int q, int p, int G, int N, double *mu,
-                  double *lam_vec, double *psi_vec, double *eta, double *alpha, double eta_max, double alpha_min,
-                  double tol, int max_it, int *iterations);
+                  double *lam_vec, double *psi_vec, double *eta, double *alpha, int fixed_eta, int fixed_alpha,
+                  double eta_max, double alpha_min, double tol, int max_it, int *iterations);
 double aecm_CCU(double *z, double *x, double *v, int cls_ind, int* cls, int q, int p, int G, int N, double *mu,
-                  double *lam_vec, double *psi_vec, double *eta, double *alpha, double eta_max, double alpha_min,
-                  double tol, int max_it, int *iterations);
+                  double *lam_vec, double *psi_vec, double *eta, double *alpha, int fixed_eta, int fixed_alpha,
+                  double eta_max, double alpha_min, double tol, int max_it, int *iterations);
 double aecm_CUC(double *z, double *x, double *v, int cls_ind, int* cls, int q, int p, int G, int N, double *mu,
-                  double *lam_vec, double *psi_vec, double *eta, double *alpha, double eta_max, double alpha_min,
-                  double tol, int max_it, int *iterations);
+                  double *lam_vec, double *psi_vec, double *eta, double *alpha, int fixed_eta, int fixed_alpha,
+                  double eta_max, double alpha_min, double tol, int max_it, int *iterations);
 double aecm_CUU(double *z, double *x, double *v, int cls_ind, int* cls, int q, int p, int G, int N, double *mu,
-                  double *lam_vec, double *psi_vec, double *eta, double *alpha, double eta_max, double alpha_min,
-                  double tol, int max_it, int *iterations);
+                  double *lam_vec, double *psi_vec, double *eta, double *alpha, int fixed_eta, int fixed_alpha,
+                  double eta_max, double alpha_min, double tol, int max_it, int *iterations);
 
 double aecm_UCC(double *z, double *x, double *v, int cls_ind, int* cls, int q, int p, int G, int N, double *mu,
-                  double *lam_vec, double *psi_vec, double *eta, double *alpha, double eta_max, double alpha_min,
-                  double tol, int max_it, int *iterations);
+                  double *lam_vec, double *psi_vec, double *eta, double *alpha, int fixed_eta, int fixed_alpha,
+                  double eta_max, double alpha_min, double tol, int max_it, int *iterations);
 double aecm_UCU(double *z, double *x, double *v, int cls_ind, int* cls, int q, int p, int G, int N, double *mu,
-                  double *lam_vec, double *psi_vec, double *eta, double *alpha, double eta_max, double alpha_min,
-                  double tol, int max_it, int *iterations);
+                  double *lam_vec, double *psi_vec, double *eta, double *alpha, int fixed_eta, int fixed_alpha,
+                  double eta_max, double alpha_min, double tol, int max_it, int *iterations);
 double aecm_UUC(double *z, double *x, double *v, int cls_ind, int* cls, int q, int p, int G, int N, double *mu,
-                  double *lam_vec, double *psi_vec, double *eta, double *alpha, double eta_max, double alpha_min,
-                  double tol, int max_it, int *iterations);
+                  double *lam_vec, double *psi_vec, double *eta, double *alpha, int fixed_eta, int fixed_alpha,
+                  double eta_max, double alpha_min, double tol, int max_it, int *iterations);
 double aecm_UUU(double *z, double *x, double *v, int cls_ind, int* cls, int q, int p, int G, int N, double *mu,
-                  double *lam_vec, double *psi_vec, double *eta, double *alpha, double eta_max, double alpha_min,
-                  double tol, int max_it, int *iterations);
+                  double *lam_vec, double *psi_vec, double *eta, double *alpha, int fixed_eta, int fixed_alpha,
+                  double eta_max, double alpha_min, double tol, int max_it, int *iterations);
 
 // z-updates
 
@@ -37,7 +37,7 @@ void update_zv2(double *log_dens, double *x, double *z, double *v, double *pi, d
 
 double Brent_fmin(double ax, double bx, double (*f)(double, void *), void *info, double tol);
 
-void update_eta(double *eta, double eta_max, double *zbad, double **mahalanobis, int N, int G, int p);
+void update_eta(double *eta, double eta_max, double *zbad, double **mahalanobis, int N, int G, int p, int fixed);
 
 void update_mahal_CCC(double **mahal, double *x, double  *lambda, double  psi, double *mu, int N, int G, int p, int q);
 void update_mahal_CCU(double **mahal, double *x, double  *lambda, double *psi, double *mu, int N, int G, int p, int q);
@@ -56,8 +56,8 @@ void   update_pi(double *pi, double *n, int G, int N);
 void   update_mu(double *mu, double *n, double *x, double *z, double *correction, int G, int N, int p);
 void   update_correction(double *correction, double *v, double *eta, int G, int N);
 
-void   update_alpha(double *alpha, double alpha_min, double *z, double *n, double *v, int G, int N);
-void   update_alpha_numerical(double *alpha, double alpha_min, double *z, double *v, int G, int N);
+void   update_alpha(double *alpha, double alpha_min, double *z, double *n, double *v, int G, int N, int fixed);
+void   update_alpha_numerical(double *alpha, double alpha_min, double *z, double *v, int G, int N, int fixed);
 
 void   update_stilde(double *sampcovtilde, double *x, double *z, double *mu, double *correction, int G, int N, int p);
 void   update_sg(double **S, double *x, double *z, double *mu, double *correction, double *n, int p, int G, int N);

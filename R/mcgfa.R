@@ -84,7 +84,10 @@ mcgfa <- function(
     num_q <- length(rq)
 
     # check models
-    all_models <- c("CCC", "CCU", "CUC", "CUU", "UCC", "UCU", "UUC", "UUU")
+    all_models <- c("CCCCC", "CCCCU", "CCCUC", "CCCUU", "CCUCC", "CCUCU", "CCUUC", "CCUUU",
+                    "CUCCC", "CUCCU", "CUCUC", "CUCUU", "CUUCC", "CUUCU", "CUUUC", "CUUUU",
+                    "UCCCC", "UCCCU", "UCCUC", "UCCUU", "UCUCC", "UCUCU", "UCUUC", "UCUUU",
+                    "UUCCC", "UUCCU", "UUCUC", "UUCUU", "UUUCC", "UUUCU", "UUUUC", "UUUUU")
     if (models == "all" || is.null(models)) {
         models <- all_models
     }
@@ -193,7 +196,7 @@ mcgfa <- function(
                 }
             }
         }
-
+  
         parallel_output <- parallel::mclapply(GQM, parallel_wrapper, mc.cores = cores, mc.preschedule = FALSE)
 
         fits <- list()
@@ -221,14 +224,20 @@ mcgfa <- function(
         pb_counter <- 0
         pb <- create_progress_bar(rG,num_G,num_q,num_model,models)
 
-        # For a one-compnent model, all of the models are equivalent to either CCC or CCU:
-        CCC_equiv <- c("CCC", "CUC", "UCC", "UUC")
-        CCU_equiv <- c("CCU", "CUU", "UCU", "UUU")
+        # For a one-component model, all of the models are equivalent to either CCCCC or CCUCC:
+        CCCCC_equiv <- c("CCCCC", "CUCCC", "UCCCC", "UUCCC",
+                       "CCCCU", "CUCCU", "UCCCU", "UUCCU",
+                       "CCCUC", "CUCUC", "UCCUC", "UUCUC",
+                       "CCCUU", "CUCUU", "UCCUU", "UUCUU")
+        CCUCC_equiv <- c("CCUCC", "CUUCC", "UCUCC", "UUUCC",
+                       "CCUCU", "CUUCU", "UCUCU", "UUUCU",
+                       "CCUUC", "CUUUC", "UCUUC", "UUUUC",
+                       "CCUUU", "CUUUU", "UCUUU", "UUUUU")
 
         # Run one from each equivalence class & store them in equiv_fit list.
         if (1 %in% rG) {
-            equiv_fit <- list(CCC=list(),CCU=list())
-            for (equiv_class in list(CCC_equiv,CCU_equiv)) {
+            equiv_fit <- list(CCCCC = list(), CCUCC = list())
+            for (equiv_class in list(CCCCC_equiv, CCUCC_equiv)) {
                 if (any(models %in% equiv_class)) {
                     for (j in 1:num_q) {
                         equiv_fit[[equiv_class[1]]][[j]] <- mcgfa_EM(X, 1, rq[j], equiv_class[1], known, init_method,
@@ -253,10 +262,10 @@ mcgfa <- function(
                     tryCatch({
                         if (rG[i] == 1) {
                             # in one component case, just take model fit that has already been stored
-                            if (models[k] %in% CCC_equiv) {
-                                equiv_class <- "CCC"
+                            if (models[k] %in% CCCCC_equiv) {
+                                equiv_class <- "CCCCC"
                             } else {
-                                equiv_class <- "CCU"
+                                equiv_class <- "CCUCC"
                             }
                             fits[[i]][[j]][[k]] <- equiv_fit[[equiv_class]][[j]]
                         } else {

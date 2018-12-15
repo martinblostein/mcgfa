@@ -26,7 +26,11 @@ mcgfa_EM <- function(
     # SET UP #
     #--------#
 
-    model_list <- c("CCC", "CCU", "CUC", "CUU", "UCC", "UCU", "UUC", "UUU")
+    cov_model <- substr(model, 1, 3)
+    fixed_alpha <- ifelse(substr(model, 4, 4) == 'C', 1L, 0L)
+    fixed_eta <- ifelse(substr(model, 5, 5) == 'C', 1L, 0L)
+    
+    cov_model_list <- c("CCC", "CCU", "CUC", "CUU", "UCC", "UCU", "UUC", "UUU")
     N <- nrow(X)    # sample size
     p <- ncol(X)    # number of variables
     iterations <- 0
@@ -40,7 +44,7 @@ mcgfa_EM <- function(
     eta <- rep(1.01, G)
 
     bic <- 0;
-    model_number <- which(model_list == model)
+    cov_model_number <- match(cov_model, cov_model_list)
 
     #------------------#
     # Z INITIALIZATION #
@@ -51,7 +55,7 @@ mcgfa_EM <- function(
 
         dummy <- capture.output(
             suppressWarnings(McNi <- pgmm::pgmmEM(x = X, zstart = 2, rq = q, rG = G,
-                                                  modelSubset = model, class = known))
+                                                  modelSubset = cov_model, class = known))
         )
 
         z <- McNi$zhat
@@ -59,31 +63,31 @@ mcgfa_EM <- function(
         # Now process Lambda and Psi from the pgmm format:
 
         # LAMBDA
-        if (substr(model, 1, 1) == "C") {
+        if (substr(cov_model, 1, 1) == "C") {
             # lambda constrained to be identical across groups
             Lambda <- t(McNi$load)
         }
-        if (substr(model, 1, 1) == "U") {
+        if (substr(cov_model, 1, 1) == "U") {
             # lambda free to vary across groups
             Lambda <- array(0, c(p, q, G))
             for(j in 1:G) Lambda[,,j] <- t(McNi$load[[j]])
         }
 
         # PSI
-        if (model %in% c("CCC", "UCC")) {
+        if (cov_model %in% c("CCC", "UCC")) {
             # psi constrained & isotropic
             Psi <- McNi$noisev
         }
-        if (model %in% c("CCU", "UCU")) {
+        if (cov_model %in% c("CCU", "UCU")) {
             # psi constrained & non-isotropic
             Psi <- McNi$noisev
         }
-        if (model %in% c("CUU", "UUU")) {
+        if (cov_model %in% c("CUU", "UUU")) {
             # psi unconstrained & non-isotropic
             Psi <- array(0, c(p, G))
             for(j in 1:G) Psi[,j] <- diag(McNi$noisev[[j]])
         }
-        if (model %in% c("CUC", "UUC")) {
+        if (cov_model %in% c("CUC", "UUC")) {
             # psi unconstrained & isotropic
             Psi <- McNi$noisev
         }
@@ -126,7 +130,7 @@ mcgfa_EM <- function(
     # Lambda and Psi must now be estimated from the initial z.
 
     if (init_method != "pgmm") {
-        inits <- init_load(X, z, G, N, p, q, model)
+        inits <- init_load(X, z, G, N, p, q, cov_model)
         Lambda <- inits$lambda
         Psi <- inits$psi
     }
@@ -135,8 +139,8 @@ mcgfa_EM <- function(
     # CALL AECM ALGORITHM #
     # --------------------#
 
-    EM.out <- run_mcgfa(X, z, v, bic, known, q, p, G, N, mu, model_number, class_ind, 
-                        Lambda, Psi, eta, alpha, eta_max, alpha_min, tol, max_it, iterations)
+    EM.out <- run_mcgfa(X, z, v, bic, known, q, p, G, N, mu, cov_model_number, fixed_alpha, fixed_eta,
+                        class_ind, Lambda, Psi, eta, alpha, eta_max, alpha_min, tol, max_it, iterations)
 
     # ---------------#
     # PREPARE OUTPUT #
@@ -152,16 +156,16 @@ mcgfa_EM <- function(
 
     # reshape psi into array of matrices
     psi <- array(0, c(p, p, G))
-    if (model %in% c("CCC", "UCC")) { psi_diag <- rep(EM.out$psi, p*p*G) }
-    if (model %in% c("CCU", "UCU")) { psi_diag <- rep(EM.out$psi, G) }
-    if (model %in% c("CUC", "UUC")) { psi_diag <- rep(EM.out$psi, each = p) }
-    if (model %in% c("CUU", "UUU")) { psi_diag <- EM.out$psi }
+    if (cov_model %in% c("CCC", "UCC")) { psi_diag <- rep(EM.out$psi, p*p*G) }
+    if (cov_model %in% c("CCU", "UCU")) { psi_diag <- rep(EM.out$psi, G) }
+    if (cov_model %in% c("CUC", "UUC")) { psi_diag <- rep(EM.out$psi, each = p) }
+    if (cov_model %in% c("CUU", "UUU")) { psi_diag <- EM.out$psi }
     for (g in 0:(G-1)) psi[,,g+1] <- diag(psi_diag[(g*p+1):(g*p+p)])
 
     # reshape lambda into array of matrices
     lambda <- array(0, c(p, q, G))
-    if (substr(model, 1, 1) == "C") { lambda_temp <- rep(EM.out$lambda, G) }
-    if (substr(model, 1, 1) == "U") { lambda_temp <- EM.out$lambda }
+    if (substr(cov_model, 1, 1) == "C") { lambda_temp <- rep(EM.out$lambda, G) }
+    if (substr(cov_model, 1, 1) == "U") { lambda_temp <- EM.out$lambda }
 
     for (g in 0:(G-1)) lambda[,,g+1] <- matrix(lambda_temp[(g*p*q+1):(g*p*q+p*q)], p, q, byrow = TRUE)
 
