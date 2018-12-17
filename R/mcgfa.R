@@ -189,7 +189,6 @@ mcgfa <- function(
     if (parallel) {
 
         # PARALLEL COMPUTATION #
-
         GQM <- list()
         for (g in 1:num_G) {
             for (q in 1:num_q) {
@@ -226,27 +225,26 @@ mcgfa <- function(
         pb_counter <- 0
         pb <- create_progress_bar(rG,num_G,num_q,num_model,models)
 
-        # For a one-component model, all of the models are equivalent to either CCCCC or CCUCC:
-        CCCCC_equiv <- c("CCCCC", "CUCCC", "UCCCC", "UUCCC",
-                       "CCCCU", "CUCCU", "UCCCU", "UUCCU",
-                       "CCCUC", "CUCUC", "UCCUC", "UUCUC",
-                       "CCCUU", "CUCUU", "UCCUU", "UUCUU")
-        CCUCC_equiv <- c("CCUCC", "CUUCC", "UCUCC", "UUUCC",
-                       "CCUCU", "CUUCU", "UCUCU", "UUUCU",
-                       "CCUUC", "CUUUC", "UCUUC", "UUUUC",
-                       "CCUUU", "CUUUU", "UCUUU", "UUUUU")
-
+        # For a one-component model, all of the models are equivalent to either CCCCC or CCUCC.
         # Run one from each equivalence class & store them in equiv_fit list.
         if (1 %in% rG) {
             equiv_fit <- list(CCCCC = list(), CCUCC = list())
-            for (equiv_class in list(CCCCC_equiv, CCUCC_equiv)) {
-                if (any(models %in% equiv_class)) {
-                    for (j in 1:num_q) {
-                        equiv_fit[[equiv_class[1]]][[j]] <- mcgfa_EM(X, 1, rq[j], equiv_class[1], known, init_method,
-                                                                    init_class[[1]], tol, eta_max, alpha_min, max_it)
-                        pb_counter <- pb_counter + 1
-                        setTxtProgressBar(pb, pb_counter)
-                    }
+            
+            if (any(substr(models, 3, 3) == "C")) {
+                for (j in 1:num_q) {
+                    equiv_fit$CCCCC[[j]] <- mcgfa_EM(X, 1, rq[j], "CCCCC", known, init_method,
+                                                                 init_class[[1]], tol, eta_max, alpha_min, max_it)
+                    pb_counter <- pb_counter + 1
+                    setTxtProgressBar(pb, pb_counter)
+                }
+                
+            }
+            if (any(substr(models, 3, 3) == "U")) {
+                for (j in 1:num_q) {
+                    equiv_fit$CCUCC[[j]] <- mcgfa_EM(X, 1, rq[j], "CCUCC", known, init_method,
+                                                                 init_class[[1]], tol, eta_max, alpha_min, max_it)
+                    pb_counter <- pb_counter + 1
+                    setTxtProgressBar(pb, pb_counter)
                 }
             }
         }
@@ -264,11 +262,7 @@ mcgfa <- function(
                     tryCatch({
                         if (rG[i] == 1) {
                             # in one component case, just take model fit that has already been stored
-                            if (models[k] %in% CCCCC_equiv) {
-                                equiv_class <- "CCCCC"
-                            } else {
-                                equiv_class <- "CCUCC"
-                            }
+                            equiv_class <- ifelse(substr(models[k], 3, 3) == "C", "CCCCC", "CCUCC")
                             fits[[i]][[j]][[k]] <- equiv_fit[[equiv_class]][[j]]
                         } else {
                             # otherwise, fit the multi-component model
