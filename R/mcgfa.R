@@ -62,16 +62,13 @@ mcgfa <- function(
     }
     if (any(duplicated(rG))) {
         rG <- unique(rG)
-        print("Removed duplicated group size choices.")
+        message("Removed duplicated group size choices.")
     }
     if (any(duplicated(rq))) {
         rG <- unique(rG)
-        print("Removed duplicated choices of number of factors.")
+        message("Removed duplicated choices of number of factors.")
     }
-    if (any(duplicated(models))) {
-        models <- unique(rG)
-        print("Removed duplicated model choices.")
-    }
+
     if (max(rq) > ncol(X)/2) {
         stop("Cannot fit models with q > p/2.")
     }
@@ -88,8 +85,13 @@ mcgfa <- function(
                     "CUCCC", "CUCCU", "CUCUC", "CUCUU", "CUUCC", "CUUCU", "CUUUC", "CUUUU",
                     "UCCCC", "UCCCU", "UCCUC", "UCCUU", "UCUCC", "UCUCU", "UCUUC", "UCUUU",
                     "UUCCC", "UUCCU", "UUCUC", "UUCUU", "UUUCC", "UUUCU", "UUUUC", "UUUUU")
-    if (models == "all" || is.null(models)) {
+    if (identical(models, "all") || is.null(models)) {
         models <- all_models
+    }
+    models <- toupper(models)
+    if (any(duplicated(models))) {
+        models <- unique(models)
+        message("Removed duplicated model choices.")
     }
     if (!all(models %in% all_models)) {
         stop("Invalid model name(s).")
