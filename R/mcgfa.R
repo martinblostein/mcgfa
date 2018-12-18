@@ -79,23 +79,9 @@ mcgfa <- function(
 
     num_G <- length(rG)
     num_q <- length(rq)
+    
+    models <- parse_models_argument(models)
 
-    # check models
-    all_models <- c("CCCCC", "CCCCU", "CCCUC", "CCCUU", "CCUCC", "CCUCU", "CCUUC", "CCUUU",
-                    "CUCCC", "CUCCU", "CUCUC", "CUCUU", "CUUCC", "CUUCU", "CUUUC", "CUUUU",
-                    "UCCCC", "UCCCU", "UCCUC", "UCCUU", "UCUCC", "UCUCU", "UCUUC", "UCUUU",
-                    "UUCCC", "UUCCU", "UUCUC", "UUCUU", "UUUCC", "UUUCU", "UUUUC", "UUUUU")
-    if (identical(models, "all") || is.null(models)) {
-        models <- all_models
-    }
-    models <- toupper(models)
-    if (any(duplicated(models))) {
-        models <- unique(models)
-        message("Removed duplicated model choices.")
-    }
-    if (!all(models %in% all_models)) {
-        stop("Invalid model name(s).")
-    }
     num_model <- length(models)
 
     # check known class labels
@@ -323,4 +309,43 @@ mcgfa <- function(
             class = "mcgfa"
         )
     )
+}
+
+all_models <- apply(do.call(expand.grid, rep(list(c('C', 'U')), 5)), 1, paste, collapse = '')
+
+parse_models_argument <- function(models) {
+
+  if (is.null(models) || length(models) == 0 || 'all' %in% models) {
+    return(all_models)
+  }
+  
+  models <- toupper(models)
+  
+  invalid_model_strings <- grep('^[UCX]{5}$', models, invert = TRUE, value = TRUE)
+  
+  if (length(invalid_model_strings) > 0) {
+    stop(paste("Invalid model specification(s):", paste(invalid_model_strings, collapse = ', ')))
+  }
+  
+  expanded_models <- lapply(models, expand_model_string)
+  expanded_models <- do.call(c, expanded_models)
+  
+  unique_models <- unique(expanded_models)
+  
+  unique_models
+  
+}
+
+expand_model_string <- function(model_string) {
+  chars <- strsplit(model_string, '')[[1]]
+  
+  chars <- lapply(chars, function(chr) {
+    if (chr == 'X') {
+      c('C', 'U')
+    } else {
+      chr
+    }
+  })
+  
+  apply(expand.grid(chars), 1, paste, collapse = '')
 }
