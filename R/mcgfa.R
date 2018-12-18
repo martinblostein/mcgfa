@@ -163,29 +163,54 @@ mcgfa <- function(
     # CALL MODEL FITTING FUNCTION #
     # --------------------------- #
 
-    parallel_wrapper <- function(GQM) {
-        # GQM is a list of the form: {G, q, modelname}
-        i <- which(GQM[[1]] == rG)
-        tryCatch({
-            mcgfa_EM(X, rG[GQM[1]], rq[GQM[2]], models[GQM[3]], known, init_method,
-                     init_class[[i]], tol, eta_max, alpha_min, max_it)
-        }, error = function(e) cat(paste("\n Model not estimated.\n", e)))
-    }
-
     if (parallel) {
 
         # PARALLEL COMPUTATION #
-        GQM <- list()
-        for (g in 1:num_G) {
-            for (q in 1:num_q) {
-                for (m in 1:num_model) {
-                    GQM[[(g-1)*(num_q*num_model) + (q-1)*num_model + m]] <- c(g, q, m)
-                }
-            }
+        GQM <- expand.grid(model = models, q = rq, G = rG, equiv = NA_character_, stringsAsFactors = FALSE)
+        GQM$i <- 1:nrow(GQM)
+       
+        equiv_CCCCC <- (GQM$G == 1) & substr(GQM$model, 3, 3) == 'C'
+        equiv_CCUCC <- (GQM$G == 1) & substr(GQM$model, 3, 3) == 'U' 
+        
+        GQM$equiv[equiv_CCCCC] <- 'CCCCC'
+        GQM$equiv[equiv_CCUCC] <- 'CCUCC'
+        
+        GQM_run <- GQM[is.na(GQM$equiv),]
+        
+        GQM_run$equiv <- NA_character_
+        
+        if (any(equiv_CCCCC)) {
+            GQM_run <- rbind(GQM_run,
+                             expand.grid(model = 'CCCCC', q = rq, G = 1, equiv = 'CCCCC',
+                                         i = NA_integer_,  stringsAsFactors = FALSE))
         }
-  
-        parallel_output <- parallel::mclapply(GQM, parallel_wrapper, mc.cores = cores, mc.preschedule = FALSE)
+        if (any(equiv_CCUCC)) {
+            GQM_run <- rbind(GQM_run,
+                             expand.grid(model = 'CCUCC', q = rq, G = 1, equiv = 'CCUCC',
+                                         i = NA_integer_, stringsAsFactors = FALSE))
+        }
+        
+        parallel_output <- parallel::mclapply(1:nrow(GQM_run), function(i) {
+            row <- GQM_run[i,]
+            iG <- which(row$G == rG)
+            tryCatch({
+                mcgfa_EM(X, row$G, row$q, row$model, known, init_method,
+                         init_class[[iG]], tol, eta_max, alpha_min, max_it)
+            }, error = function(e) cat(paste("\n Model not estimated.\n", e)))
+        }, mc.cores = cores, mc.preschedule = FALSE)
 
+        ccccc_runs <- parallel_output[sapply(GQM_run$equiv, identical, y = 'CCCCC')]
+        ccucc_runs <- parallel_output[sapply(GQM_run$equiv, identical, y = 'CCUCC')]
+        
+        expanded_output <- lapply(1:nrow(GQM), function(i) {
+            row <- GQM[i,]
+            
+            switch(row$equiv,
+                   CCCCC = ccccc_runs[[match(row$q, rq)]],
+                   CCUCC = ccucc_runs[[match(row$q, rq)]],
+                   parallel_output[[match(i, GQM_run$i)]])
+        })
+        
         fits <- list()
         ii <- 1
 
@@ -197,8 +222,8 @@ mcgfa <- function(
                     fits[[i]][[j]][[k]] <- list()
 
                     # populate this list with the results from above
-                    fits[[i]][[j]][[k]] <- parallel_output[[ii]]
-                    BIC[i, j, k] <- parallel_output[[ii]]$bic
+                    fits[[i]][[j]][[k]] <- expanded_output[[ii]]
+                    BIC[i, j, k] <- expanded_output[[ii]]$bic
                     ii <- ii + 1
                 }
             }
