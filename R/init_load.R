@@ -23,7 +23,7 @@ init_load <- function(x, z, G, N, p, q, model) {
                     lambda[i,j,g] <- sqrt(eigval[j]) * eigvec[i]
         }
 
-        if (model %in% c("UCU","UCC")) {
+        if (model %in% c("UCU", "UCC")) {
             psi <- c(rep(0,p))
             for(g in 1:G) {
                 psi <- psi + pi[g] * abs(diag(sampcov[,,g] - lambda[,,g] %*% t(lambda[,,g])))
@@ -32,7 +32,7 @@ init_load <- function(x, z, G, N, p, q, model) {
             if (model == "UCC") psi <- sum(psi)/p
         }
 
-        if (model %in% c("UUU","UUC")) {
+        if (model %in% c("UUU", "UUC")) {
             psi_tmp <- matrix(0,G,p)
             for (g in 1:G){
                 psi_tmp[g,]<-abs(diag(sampcov[,,g] - lambda[,,g] %*% t(lambda[,,g])))
@@ -66,7 +66,7 @@ init_load <- function(x, z, G, N, p, q, model) {
             psi <- sum(abs(diag(stilde - lambda %*% t(lambda)))) / p
         }
 
-        if (model %in% c("CUC","CUU")) {
+        if (model %in% c("CUC", "CUU")) {
             psi_tmp <- matrix(0,G,p)
             for (g in 1:G){
                 psi_tmp[g,] <- abs(diag(sampcov[,,g] - lambda%*%t(lambda)))

@@ -101,7 +101,7 @@ mcgfa <- function(
     }
 
     # check initialization method
-    if (!(init_method %in% c("kmeans","pgmm","hard","soft","supervised"))) {
+    if (!(init_method %in% c("kmeans", "pgmm", "hard", "soft", "supervised"))) {
         stop("Invalid initialization type. Choose one of 'kmeans','pgmm', 'hard', 'soft' or 'supervised'.")
     }
 
@@ -133,10 +133,10 @@ mcgfa <- function(
         line <- NULL
         repeat {
             line <- tolower(readline(">>> "))
-            if (line %in% c("n","no")) {
+            if (line %in% c("n", "no")) {
                 cat("Exiting, please selected appropriate number of cores using ``cores'' argument, or perform serial computation.")
                 return()
-            } else if (line %in% c("y","yes")) {
+            } else if (line %in% c("y", "yes")) {
                 cat("Proceeding with automatically detected number of cores...")
                 break()
             } else {
@@ -311,14 +311,14 @@ mcgfa <- function(
         }
         else {
             cat("\n")
-            cat("  # ------------------------------- #","\n")
-            cat("  #  MCGFA Model Selection Results  #","\n")
-            cat("  # ------------------------------- #","\n\n")
+            cat("  # ------------------------------- #", "\n")
+            cat("  #  MCGFA Model Selection Results  #", "\n")
+            cat("  # ------------------------------- #", "\n\n")
             cat("  Best BIC value of",best.fit$bic,
                 "obtained for the",best.fit$model,
                 "model with G =",best.fit$G,
                 "components and q =",best.fit$q,
-                "latent factors.","\n")
+                "latent factors.", "\n")
         }
     }
 

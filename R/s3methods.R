@@ -9,8 +9,8 @@ predict.mcgfa <- function(object, y, ...) {
 
     m <- nrow(y)
 
-    if (!is.null(attr(fit$X,"scaled:scale"))) {
-        y <- scale(y, center = attr(fit$X,"scaled:center"), scale = attr(fit$X,"scaled:scale"))
+    if (!is.null(attr(fit$X, "scaled:scale"))) {
+        y <- scale(y, center = attr(fit$X, "scaled:center"), scale = attr(fit$X, "scaled:scale"))
     }
 
     dens <- matrix(0,m,fit$G)
