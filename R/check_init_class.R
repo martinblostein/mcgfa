@@ -44,7 +44,7 @@ check_init_class <- function(init_class, init_method, X, rG, num_G, original_rG_
 
     if (init_method == "soft") {
         if (!all(sapply(init_class,is.matrix))) {
-            stop("init_class must be a list of matrices (for init_method = 'hard').")
+            stop("init_class must be a list of matrices (for init_method = 'soft').")
         }
         if (!all(sapply(init_class,nrow) == nrow(X))) {
             stop(paste("Elements of init_class must have number of rows equal",
