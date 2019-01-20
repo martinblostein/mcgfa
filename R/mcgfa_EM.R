@@ -174,7 +174,7 @@ mcgfa_EM <- function(
     for (g in 1:G) sigma[,,g] <- lambda[,,g] %*% t(lambda[,,g]) + psi[,,g]
 
     # number of model parameters:
-    npar <- switch(model,
+    npar <- switch(cov_model,
                   CCC = (G-1) + p*G + ((p*q - q*(q-1)/2) + 1) + 2*G,
                   CCU = (G-1) + p*G + ((p*q - q*(q-1)/2) + p) + 2*G,
                   CUC = (G-1) + p*G + ((p*q - q*(q-1)/2) + G) + 2*G,
@@ -183,6 +183,8 @@ mcgfa_EM <- function(
                   UCU = (G-1) + p*G + (G*(p*q - q*(q-1)/2) + p) + 2*G,
                   UUC = (G-1) + p*G + (G*(p*q - q*(q-1)/2) + G) + 2*G,
                   UUU = (G-1) + p*G + (G*(p*q - q*(q-1)/2) + G*p) + 2*G)
+    
+    npar <- npar + ifelse(fixed_alpha, 1, G) + ifelse(fixed_eta, 1, G)
 
     # final list
     result <- list(
