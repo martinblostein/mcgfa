@@ -231,10 +231,12 @@ mcgfa <- function(
     } else {
 
         # SERIAL COMPUTATION #
-
-        # set up progress bar
-        pb_counter <- 0
-        pb <- create_progress_bar(rG,num_G,num_q,num_model,models)
+        
+        if (!silent) {
+            # set up progress bar
+            pb_counter <- 0
+            pb <- create_progress_bar(rG,num_G,num_q,num_model,models)
+        }
 
         # For a one-component model, all of the models are equivalent to either CCCCC or CCUCC.
         # Run one from each equivalence class & store them in equiv_fit list.
@@ -245,8 +247,10 @@ mcgfa <- function(
                 for (j in 1:num_q) {
                     equiv_fit$CCCCC[[j]] <- mcgfa_EM(X, 1, rq[j], "CCCCC", known, init_method,
                                                                  init_class[[1]], tol, eta_max, alpha_min, max_it)
-                    pb_counter <- pb_counter + 1
-                    setTxtProgressBar(pb, pb_counter)
+                    if (!silent) {
+                        pb_counter <- pb_counter + 1
+                        setTxtProgressBar(pb, pb_counter)
+                    }
                 }
                 
             }
@@ -254,8 +258,10 @@ mcgfa <- function(
                 for (j in 1:num_q) {
                     equiv_fit$CCUCC[[j]] <- mcgfa_EM(X, 1, rq[j], "CCUCC", known, init_method,
                                                                  init_class[[1]], tol, eta_max, alpha_min, max_it)
-                    pb_counter <- pb_counter + 1
-                    setTxtProgressBar(pb, pb_counter)
+                    if (!silent) {
+                        pb_counter <- pb_counter + 1
+                        setTxtProgressBar(pb, pb_counter)
+                    }
                 }
             }
         }
@@ -279,8 +285,10 @@ mcgfa <- function(
                             # otherwise, fit the multi-component model
                             fits[[i]][[j]][[k]] <- mcgfa_EM(X, rG[i], rq[j], models[k], known, init_method,
                                                            init_class[[i]], tol, eta_max, alpha_min, max_it)
-                            pb_counter <- pb_counter + 1
-                            setTxtProgressBar(pb, pb_counter)
+                            if (!silent) {
+                                pb_counter <- pb_counter + 1
+                                setTxtProgressBar(pb, pb_counter)
+                            }
                         }
                         # store BIC values corresponding to model fits
                         BIC[i, j, k] <- fits[[i]][[j]][[k]]$bic
@@ -288,38 +296,56 @@ mcgfa <- function(
                 }
             }
         }
-        close(pb)
+        
+        if (!silent) {
+            close(pb)
+        }
     }
+    
+    successful_fits <- any(!is.na(BIC))
 
-    # --------------------------- #
-    # DETERMINE BEST MODEL BY BIC #
-    # --------------------------- #
-
-    best.ind <- which(BIC==max(BIC[!is.infinite(BIC) & !is.na(BIC)]),arr.ind=T)
-    best.ind <- best.ind[1,]
-    best.fit <- fits[[best.ind]]
-
-    # --------------- #
-    # DISPLAY RESULTS #
-    # --------------- #
-
-    if (!silent) {
-        if (num_model == 1) {
-            cat(paste0("The MCGFA-", best.fit$model, " model with G = ",best.fit$G,
-                       " components and q = ",best.fit$q,
-                       " latent factors gives a BIC value of ", round(best.fit$bic, 3), ".", "\n"))
+    if (successful_fits) {
+        
+        # --------------------------- #
+        # DETERMINE BEST MODEL BY BIC #
+        # --------------------------- #
+        
+        
+        
+        
+        best.ind <- which(BIC==max(BIC[!is.infinite(BIC) & !is.na(BIC)]),arr.ind=T)
+        best.ind <- best.ind[1,]
+        best.fit <- fits[[best.ind]]
+        
+        
+        # --------------- #
+        # DISPLAY RESULTS #
+        # --------------- #
+        
+        if (!silent) {
+            if (num_model == 1) {
+                cat(paste0("The MCGFA-", best.fit$model, " model with G = ",best.fit$G,
+                           " components and q = ",best.fit$q,
+                           " latent factors gives a BIC value of ", round(best.fit$bic, 3), ".", "\n"))
+            } else {
+                cat("\n")
+                cat("  # ------------------------------- #", "\n")
+                cat("  #  MCGFA Model Selection Results  #", "\n")
+                cat("  # ------------------------------- #", "\n\n")
+                cat("  Best BIC value of",best.fit$bic,
+                    "obtained for the",best.fit$model,
+                    "model with G =",best.fit$G,
+                    "components and q =",best.fit$q,
+                    "latent factors.", "\n")
+            }
         }
-        else {
-            cat("\n")
-            cat("  # ------------------------------- #", "\n")
-            cat("  #  MCGFA Model Selection Results  #", "\n")
-            cat("  # ------------------------------- #", "\n\n")
-            cat("  Best BIC value of",best.fit$bic,
-                "obtained for the",best.fit$model,
-                "model with G =",best.fit$G,
-                "components and q =",best.fit$q,
-                "latent factors.", "\n")
+    } else {
+        if (!silent) {
+            cat('No successful model fits.\n')
         }
+        
+        best.fit <- NA
+        
     }
 
     return(
