@@ -41,7 +41,7 @@ mcgfa <- function(
     #---------------------#
 
     # check X
-    tryCatch(X <- as.matrix(X), error = function(e) cat(paste("X must be matrix-like.")))
+    tryCatch(X <- as.matrix(X), error = function(e) stop("X must be matrix-like."))
 
     if (any(is.na(X)))  {
         stop("No NAs allowed.")
