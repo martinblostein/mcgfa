@@ -23,8 +23,6 @@ void update_eta(double *eta, double eta_max, double *zbad, double **mahalanobis,
         }
 
         if (a == 0) {
-            printf("Warning, all observations considered 'good' with probability 1 \
-                        during eta update. Assigning eta = 1.1.");
             e = 1.01;
         } else {
             e = b / (p * a);
@@ -52,8 +50,6 @@ void update_eta(double *eta, double eta_max, double *zbad, double **mahalanobis,
             }
             
             if (a == 0) {
-                printf("Warning, all observations considered 'good' with probability 1 \
-                        during eta update for group %d. Assigning eta = 1.1", g);
                 eta[g] = 1.01;
             } else {
                 eta[g] = b / (p * a);
