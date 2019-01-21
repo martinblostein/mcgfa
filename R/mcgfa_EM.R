@@ -14,9 +14,8 @@ mcgfa_EM <- function(
     G, # number of groups
     q, # number of latent factors
     model, # covariance structure of model to fit
+    z, # initial z matrix
     known = NULL, # known classes vector
-    init_method = "kmeans", # initialization method
-    init_class, # intial class labels (only for init_method = 'hard' or 'soft')
     tol = 1.0e-03, # stopping rule in the Aitken rule
     eta_max = 1000, # maximum contamination factor
     alpha_min = 0.5, # minimum proportion of 'good' points / inliers
@@ -31,8 +30,8 @@ mcgfa_EM <- function(
     fixed_eta <- ifelse(substr(model, 5, 5) == 'C', 1L, 0L)
     
     cov_model_list <- c("CCC", "CCU", "CUC", "CUU", "UCC", "UCU", "UUC", "UUU")
-    N <- nrow(X)    # sample size
-    p <- ncol(X)    # number of variables
+    N <- nrow(X)
+    p <- ncol(X) 
     iterations <- 0
 
     class_ind <- if (!is.null(known) && (!all(known == 0))) 1 else 0
@@ -43,97 +42,13 @@ mcgfa_EM <- function(
     alpha <- numeric(G)
     eta <- rep(1.01, G)
 
-    bic <- 0;
+    bic <- 0
     cov_model_number <- match(cov_model, cov_model_list)
 
-    #------------------#
-    # Z INITIALIZATION #
-    #------------------#
-
-    if (init_method == "pgmm") {
-        # Class labels initialized using the PGMM package.
-
-        dummy <- capture.output(
-            suppressWarnings(McNi <- pgmm::pgmmEM(x = X, zstart = 2, rq = q, rG = G,
-                                                  modelSubset = cov_model, class = known))
-        )
-
-        z <- McNi$zhat
-
-        # Now process Lambda and Psi from the pgmm format:
-
-        # LAMBDA
-        if (substr(cov_model, 1, 1) == "C") {
-            # lambda constrained to be identical across groups
-            Lambda <- t(McNi$load)
-        }
-        if (substr(cov_model, 1, 1) == "U") {
-            # lambda free to vary across groups
-            Lambda <- array(0, c(p, q, G))
-            for(j in 1:G) Lambda[,,j] <- t(McNi$load[[j]])
-        }
-
-        # PSI
-        if (cov_model %in% c("CCC", "UCC")) {
-            # psi constrained & isotropic
-            Psi <- McNi$noisev
-        }
-        if (cov_model %in% c("CCU", "UCU")) {
-            # psi constrained & non-isotropic
-            Psi <- McNi$noisev
-        }
-        if (cov_model %in% c("CUU", "UUU")) {
-            # psi unconstrained & non-isotropic
-            Psi <- array(0, c(p, G))
-            for(j in 1:G) Psi[,j] <- diag(McNi$noisev[[j]])
-        }
-        if (cov_model %in% c("CUC", "UUC")) {
-            # psi unconstrained & isotropic
-            Psi <- McNi$noisev
-        }
-
-    } else if (init_method == "kmeans") {
-        # Class labels initialized via kmeans clustering
-
-        set.seed(123456) # for deterministic output
-        z_ind <- kmeans(X, G, nstart = 10)$cluster # ten random starts
-        z <- matrix(0, N, G)
-        for (i in 1:N) z[i, z_ind[i]] <- 1
-
-    } else if (init_method == "hard") {
-        # Class labels initialized
-
-        z_ind <- init_class
-        z <- matrix(0, N, G)
-        for (i in 1:N) z[i, init_class[i]] <- 1
-
-    } else if (init_method == "soft") {
-
-        z <- init_class
-
-    } else if (init_method == "supervised") {
-        # Some observations have known labels;
-        # Others assigned equal probability of arising from any group
-
-        z <- matrix(0, N, G)
-
-        for (i in 1:N){
-            if (known[i]) {
-                z[i, known[i]] <- 1
-            } else {
-                z[i, ] <- 1/G
-            }
-        }
-    }
-
-    # Except when initializing with pgmm, the covariance parameters
-    # Lambda and Psi must now be estimated from the initial z.
-
-    if (init_method != "pgmm") {
-        inits <- init_load(X, z, G, N, p, q, cov_model)
-        Lambda <- inits$lambda
-        Psi <- inits$psi
-    }
+    # Initialize lambda & psi
+    inits <- init_load(X, z, G, N, p, q, cov_model)
+    Lambda <- inits$lambda
+    Psi <- inits$psi
 
     #---------------------#
     # CALL AECM ALGORITHM #

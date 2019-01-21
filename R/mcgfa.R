@@ -24,8 +24,8 @@ mcgfa <- function(
     rq = 1:3, # number of latent factors
     models = "all", # the subset of models to be applied
     known = NULL, # known labelled data for semi
-    init_method = "kmeans", # initialization method for AECM
-    init_class = NULL, # intial class labels (only for init_method = 'hard' or 'soft')
+    init_method = "emEM", # initialization method for AECM
+    init_z = NULL, # intial z matrix (only for init_method = "given")
     max_it = 400, # maximum number of AECM iterations
     tol = 1e-3, # tolerance for Aitken criterion
     alpha_min = 0.5, # minimum proportion of 'good' points
@@ -33,7 +33,8 @@ mcgfa <- function(
     scale = T, # if true, scale data before beginning model fit
     parallel = F, # run code in parallel?
     cores = NULL, # number of parallel processes to run
-    silent = F # print info when done?
+    silent = F, # print info when done?
+    ememargs = list(numstart = 25, iterations = 5, model = "UUUUU", q = max(rq)) # options for the emEM init method 
 ) {
 
     #---------------------#
@@ -68,15 +69,15 @@ mcgfa <- function(
         rG <- unique(rG)
         message("Removed duplicated choices of number of factors.")
     }
-
     if (max(rq) > ncol(X)/2) {
         stop("Cannot fit models with q > p/2.")
     }
 
-    original_rG_order <- order(rG)
+    N <- nrow(X)
+    init_z <- init_z[order(rG)]
     rG <- sort(rG)
     rq <- sort(rq)
-
+    
     num_G <- length(rG)
     num_q <- length(rq)
     
@@ -101,14 +102,13 @@ mcgfa <- function(
     }
 
     # check initialization method
-    if (!(init_method %in% c("kmeans", "pgmm", "hard", "soft", "supervised"))) {
-        stop("Invalid initialization type. Choose one of 'kmeans','pgmm', 'hard', 'soft' or 'supervised'.")
+    if (!(init_method %in% c("emEM", "kmeans", "given", "supervised"))) {
+        stop("Invalid initialization type. Choose one of 'emEM', 'kmeans', 'given', 'supervised'.")
     }
 
     # check manual initialization
-    if (init_method %in% c("hard", "soft")) {
-        check_init_class(init_class, init_method, X, rG, num_G, original_rG_order)
-    }
+    
+    verify_init_z(init_method, init_z, N, rG)
 
     # other arguments
     if (max_it < 1) {
@@ -143,8 +143,6 @@ mcgfa <- function(
                 cat("(y/n) format required. Please try again.")
             }
         }
-
-
     }
 
     # scaling data by mean & standard deviation if reqested
@@ -158,6 +156,12 @@ mcgfa <- function(
         paste("# of factors=", rq, sep=""),
         paste("parsimonious model=", models, sep=""))
     )
+    
+    # --------------------------- #
+    # ----- INITIALIZATION ------ #
+    # --------------------------- #
+    
+    z_list <- initialize_z_list(init_method, N, X, rG, init_z, ememargs)
 
     # --------------------------- #
     # CALL MODEL FITTING FUNCTION #
@@ -194,8 +198,7 @@ mcgfa <- function(
             row <- GQM_run[i,]
             iG <- which(row$G == rG)
             tryCatch({
-                mcgfa_EM(X, row$G, row$q, row$model, known, init_method,
-                         init_class[[iG]], tol, eta_max, alpha_min, max_it)
+                mcgfa_EM(X, row$G, row$q, row$model, z_list[[iG]], known, tol, eta_max, alpha_min, max_it)
             }, error = function(e) cat(paste("\n Model not estimated.\n", e)))
         }, mc.cores = cores, mc.preschedule = FALSE)
 
@@ -245,8 +248,8 @@ mcgfa <- function(
             
             if (any(substr(models, 3, 3) == "C")) {
                 for (j in 1:num_q) {
-                    equiv_fit$CCCCC[[j]] <- mcgfa_EM(X, 1, rq[j], "CCCCC", known, init_method,
-                                                                 init_class[[1]], tol, eta_max, alpha_min, max_it)
+                    equiv_fit$CCCCC[[j]] <- mcgfa_EM(X, 1, rq[j], "CCCCC", z_list[[match(1, rG)]],
+                                                     known, tol, eta_max, alpha_min, max_it)
                     if (!silent) {
                         pb_counter <- pb_counter + 1
                         setTxtProgressBar(pb, pb_counter)
@@ -256,8 +259,8 @@ mcgfa <- function(
             }
             if (any(substr(models, 3, 3) == "U")) {
                 for (j in 1:num_q) {
-                    equiv_fit$CCUCC[[j]] <- mcgfa_EM(X, 1, rq[j], "CCUCC", known, init_method,
-                                                                 init_class[[1]], tol, eta_max, alpha_min, max_it)
+                    equiv_fit$CCUCC[[j]] <- mcgfa_EM(X, 1, rq[j], "CCUCC", z_list[[match(1, rG)]],
+                                                     known, tol, eta_max, alpha_min, max_it)
                     if (!silent) {
                         pb_counter <- pb_counter + 1
                         setTxtProgressBar(pb, pb_counter)
@@ -283,8 +286,8 @@ mcgfa <- function(
                             fits[[i]][[j]][[k]] <- equiv_fit[[equiv_class]][[j]]
                         } else {
                             # otherwise, fit the multi-component model
-                            fits[[i]][[j]][[k]] <- mcgfa_EM(X, rG[i], rq[j], models[k], known, init_method,
-                                                           init_class[[i]], tol, eta_max, alpha_min, max_it)
+                            fits[[i]][[j]][[k]] <- mcgfa_EM(X, rG[i], rq[j], models[k], z_list[[i]],
+                                                            known, tol, eta_max, alpha_min, max_it)
                             if (!silent) {
                                 pb_counter <- pb_counter + 1
                                 setTxtProgressBar(pb, pb_counter)
@@ -292,7 +295,7 @@ mcgfa <- function(
                         }
                         # store BIC values corresponding to model fits
                         BIC[i, j, k] <- fits[[i]][[j]][[k]]$bic
-                    }, error = function(e) cat(paste("\n Model not estimated.\n",e)))
+                    }, error = function(e) cat(paste("\n Model not estimated.\n", e)))
                 }
             }
         }
@@ -309,14 +312,10 @@ mcgfa <- function(
         # --------------------------- #
         # DETERMINE BEST MODEL BY BIC #
         # --------------------------- #
-        
-        
-        
-        
+
         best.ind <- which(BIC==max(BIC[!is.infinite(BIC) & !is.na(BIC)]),arr.ind=T)
         best.ind <- best.ind[1,]
         best.fit <- fits[[best.ind]]
-        
         
         # --------------- #
         # DISPLAY RESULTS #
