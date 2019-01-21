@@ -146,6 +146,7 @@ mcgfa_EM <- function(
     # PREPARE OUTPUT #
     # ---------------#
 
+    init_z <- z
     z <- matrix(EM.out$z, N, G, byrow = TRUE)
     v <- matrix(EM.out$v, N, G, byrow = TRUE)
     mu <- matrix(EM.out$mu, p, G)
@@ -203,7 +204,8 @@ mcgfa_EM <- function(
         psi = psi,
         sigma = sigma,
         npar = npar,
-        iterations = EM.out$iterations
+        iterations = EM.out$iterations,
+        init_z = init_z
     )
 
     return(result)
