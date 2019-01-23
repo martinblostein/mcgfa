@@ -184,7 +184,9 @@ mcgfa <- function(
         
         GQM_run <- GQM[is.na(GQM$equiv),]
         
-        GQM_run$equiv <- NA_character_
+        if (nrow(GQM_run) > 0) {
+            GQM_run$equiv <- NA_character_
+        }
         
         if (any(equiv_CCCCC)) {
             GQM_run <- rbind(GQM_run,
