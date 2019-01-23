@@ -69,8 +69,11 @@ mcgfa <- function(
         rG <- unique(rG)
         message("Removed duplicated choices of number of factors.")
     }
-    if (max(rq) > ncol(X)/2) {
-        stop("Cannot fit models with q > p/2.")
+  
+    
+
+    if (with(list(p = ncol(X), q = max(rq)), (p - q) ^ 2 <= (p + q))) {
+        stop("Cannot fit models with (p - q)^2 <= (p + q).")
     }
 
     N <- nrow(X)
