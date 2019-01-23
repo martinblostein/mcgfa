@@ -310,7 +310,7 @@ mcgfa <- function(
         }
     }
     
-    successful_fits <- any(!is.na(BIC))
+    successful_fits <- any(!is.na(BIC) & !is.infinite(BIC))
 
     if (successful_fits) {
         
