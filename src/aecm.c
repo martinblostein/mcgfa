@@ -81,9 +81,14 @@ double aecm_CCC(double *z, double *x, double *v, int cls_ind, int* cls, int q, i
 
     *psi_ptr = psi;
 
-    //free(lambda);
     free(n); free(beta); free(theta); free(sampcovtilde);
-    free(l); free(at); free(pi);
+    free(l); free(at); free(pi); free(zbad); free(correction);
+    
+    for(g=0; g < G; g++) {
+        free(mahal[g]);
+    }
+    
+    free(mahal);
 
     return bic;
 }
@@ -167,7 +172,14 @@ double aecm_CCU(double *z, double *x, double *v, int cls_ind, int* cls, int q, i
     // Deallocate memory
     free(w);  free(n); free(det); free(beta);
     free(theta); free(sampcovtilde); free(l); free(at); free(pi);
+    free(zbad); free(correction);
 
+    for(g=0; g < G; g++) {
+        free(mahal[g]);
+    }
+    
+    free(mahal);
+    
     return bic;
 }
 
@@ -259,13 +271,16 @@ double aecm_CUC(double *z, double *x, double *v, int cls_ind, int* cls, int q, i
 
     free(log_dens); free(n); free(log_c); free(max_log_dens);
     free(l); free(at); free(pi); free(log_detpsi);
+    free(zbad); free(correction);
+    
     for(g=0; g < G; g++) {
         free(beta[g]);
         free(theta[g]);
         free(sampcov[g]);
+        free(mahal[g]);
     }
 
-    free(beta); free(theta); free(sampcov);
+    free(beta); free(theta); free(sampcov); free(mahal);
 
     return bic;
 }
@@ -379,15 +394,17 @@ double aecm_CUU(double *z, double *x, double *v, int cls_ind, int* cls, int q, i
     /* Deallocate memory */
     free(w); free(n); free(l); free(at); free(pi);
     free(log_detsig); free(log_c); free(log_detpsi); free(Psi0);
-    free(max_log_dens); free(log_dens);
+    free(max_log_dens); free(log_dens); 
+    free(zbad); free(correction);
 
     for(g=0; g < G; g++) {
         free(beta[g]);
         free(theta[g]);
         free(sampcov[g]);
+        free(mahal[g]);
     }
-    free(beta); free(theta); free(sampcov);
-
+    free(beta); free(theta); free(sampcov); free(mahal);
+    
     return bic;
     }
 
@@ -483,14 +500,17 @@ double aecm_UCC(double *z, double *x, double *v, int cls_ind, int* cls, int q, i
 
     *psi_ptr = psi;
     free(w); free(n); free(l); free(at); free(pi); free(log_detsig); free(log_c);
+    free(zbad); free(correction);
+    
     for(g=0; g < G; g++) {
         free(beta[g]);
         free(lambda[g]);
         free(theta[g]);
         free(sampcov[g]);
+        free(mahal[g]);
     }
 
-    free(beta); free(lambda); free(theta); free(sampcov);
+    free(beta); free(lambda); free(theta); free(sampcov); free(mahal);
 
     return bic;
 }
@@ -582,14 +602,17 @@ double aecm_UCU(double *z, double *x, double *v, int cls_ind, int* cls, int q, i
 
     store_lambda(lam_vec, lambda, G, p, q);
 
-    free(log_dens); free(n); free(max_log_dens); free(l); free(at); free(pi); free(log_detsig); free(log_c);
+    free(log_dens); free(n); free(max_log_dens); free(l); free(at);
+    free(pi); free(log_detsig); free(log_c); free(zbad); free(correction);
+    
     for(g=0; g < G; g++) {
         free(beta[g]);
         free(lambda[g]);
         free(theta[g]);
         free(sampcov[g]);
+        free(mahal[g]);
     }
-    free(beta); free(lambda); free(theta); free(sampcov);
+    free(beta); free(lambda); free(theta); free(sampcov); free(mahal);
 
     return bic;
 }
@@ -680,16 +703,18 @@ double aecm_UUC(double *z, double *x, double *v, int cls_ind, int* cls, int q, i
     store_lambda(lam_vec, lambda, G, p, q);
 
     free(log_dens); free(n); free(l); free(at); free(pi);  free(log_detpsi);
-    free(log_detsig); free(log_c);
+    free(log_detsig); free(log_c); free(zbad); free(correction);
+    
     for(g=0; g < G; g++) {
         free(beta[g]);
         free(lambda[g]);
         free(theta[g]);
         free(sampcov[g]);
+        free(mahal[g]);
     }
 
     // memory deallocation
-    free(beta); free(lambda); free(theta); free(sampcov);
+    free(beta); free(lambda); free(theta); free(sampcov); free(mahal);
     return bic;
 }
 
@@ -815,14 +840,16 @@ double aecm_UUU(double *z, double *x, double *v, int cls_ind, int* cls, int q, i
     // memory deallocation
     free(log_dens); free(n); free(log_detpsi); free(l); free(at); free(pi);
     free(log_detsig); free(log_c); free(max_log_dens); free(Psi0);
+    free(zbad); free(correction);
 
     for(g=0; g < G; g++) {
         free(beta[g]);
         free(lambda[g]);
         free(theta[g]);
         free(sampcov[g]);
+        free(mahal[g]);
     }
-    free(beta); free(lambda); free(theta); free(sampcov);
+    free(beta); free(lambda); free(theta); free(sampcov); free(mahal);
     return bic;
 }
 
