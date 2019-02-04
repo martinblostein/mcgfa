@@ -91,14 +91,14 @@ mcgfa_EM <- function(
 
     # number of model parameters:
     npar <- switch(cov_model,
-                  CCC = (G-1) + p*G + ((p*q - q*(q-1)/2) + 1) + 2*G,
-                  CCU = (G-1) + p*G + ((p*q - q*(q-1)/2) + p) + 2*G,
-                  CUC = (G-1) + p*G + ((p*q - q*(q-1)/2) + G) + 2*G,
-                  CUU = (G-1) + p*G + ((p*q - q*(q-1)/2) + G*p) + 2*G,
-                  UCC = (G-1) + p*G + (G*(p*q - q*(q-1)/2) + 1) + 2*G,
-                  UCU = (G-1) + p*G + (G*(p*q - q*(q-1)/2) + p) + 2*G,
-                  UUC = (G-1) + p*G + (G*(p*q - q*(q-1)/2) + G) + 2*G,
-                  UUU = (G-1) + p*G + (G*(p*q - q*(q-1)/2) + G*p) + 2*G)
+                  CCC = (G-1) + p*G + ((p*q - q*(q-1)/2) + 1),
+                  CCU = (G-1) + p*G + ((p*q - q*(q-1)/2) + p),
+                  CUC = (G-1) + p*G + ((p*q - q*(q-1)/2) + G),
+                  CUU = (G-1) + p*G + ((p*q - q*(q-1)/2) + G*p),
+                  UCC = (G-1) + p*G + (G*(p*q - q*(q-1)/2) + 1),
+                  UCU = (G-1) + p*G + (G*(p*q - q*(q-1)/2) + p),
+                  UUC = (G-1) + p*G + (G*(p*q - q*(q-1)/2) + G),
+                  UUU = (G-1) + p*G + (G*(p*q - q*(q-1)/2) + G*p))
     
     npar <- npar + ifelse(fixed_alpha, 1, G) + ifelse(fixed_eta, 1, G)
 
