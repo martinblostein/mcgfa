@@ -46,6 +46,8 @@ void update_zv(double *log_dens, double *x, double *z, double *v, double *pi, do
         }
     }
 
+    free(log_good_dens);
+    free(log_bad_dens);
     free(log_dens_vec);
 
 }
@@ -86,6 +88,8 @@ void update_zv2(double *log_dens, double *x, double *z, double *v, double *pi, d
         }
     }
 
+    free(log_good_dens);
+    free(log_bad_dens);
     free(log_dens_vec);
 
 }

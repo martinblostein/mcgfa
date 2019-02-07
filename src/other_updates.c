@@ -56,6 +56,9 @@ void update_mu(double *mu, double *n, double *x, double *z, double *correction, 
             mu[g*p+j] = numerator[g*p+j]/denominator[g*p+j];
         }
     }
+    
+    free(numerator);
+    free(denominator);
 }
 
 // ---------- S UPDATES ----------//
