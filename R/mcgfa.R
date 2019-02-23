@@ -356,7 +356,6 @@ mcgfa <- function(
         structure(
             c(
                 list(
-                    call = match.call(),
                     X = X,
                     all.bic = BIC),
                 best.fit
