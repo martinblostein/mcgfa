@@ -14,27 +14,35 @@ mcgfa(X, rG=1:3, rq=1:3, models="all", known=NULL, init_method="kmeans",
     \item{X}{The data matrix. Rows correspond to observations and columns to variables/features; thus \eqn{X} is an \eqn{N}-by-\eqn{p} matrix. \eqn{X} must be numerical.}
     \item{rG}{The set of values used for the number of components.}
     \item{rq}{The set of values used for the number of latent factors.}
-    \item{models}{The set of models used. Some subset of \{CCC, CCU, CUC, CUU, UCC, UCU, UUC, UUU\}.}
+    \item{models}{The set of parsimonious models used. Either the string "all", or a character vector specifying a subset of models. See Details.}
     \item{known}{If NULL, clustering or ``unsupervised learning'' is performed. If a vector of length equal to the number of observations, semi-supervised learning is performed. In this case, the \code{i}-th entry of the argument \code{class} is either \eqn{0}, or some number in \eqn{{1, 2, \ldots , G}}, where \eqn{G} is the number of components. A value of \eqn{0} indicates that the label for observation \code{i} is unknown, while a nonzero value gives the known label. Note that if all values are nonzero, the model parameters are simply fit and fully supervised classification of new observations may be performed using the \code{predict} method of the \code{mcgfa} class.}
-    \item{init_method}{Selects how starting values for the AECM algorithm are determined. Valid options are "kmeans", "pgmm", "hard", and "soft".
-
+    \item{init_method}{Determines how starting values for the AECM algorithm are generated.  Valid options are "emEM", "kmeans", "given" or "supervised". If \code{known} parameter is provided, this parameter is automatically set to "supervised".
+    
         \itemize{
+            \item{\code{emEM}: initialization determined using the emEM method, where initialization candidates are randomly generated, and the AECM algorithm is applied for a small number of iterations. Whichever random initialization produces the best model in the short AECM runs is selected as the initialization for the full AECM runs.}
             \item{\code{kmeans}: begin by clustering observations using built-in \code{kmeans} R function.}
-            \item{\code{pgmm}: apply the corresponding PGMM model of the \code{pgmm} R package and use the resulting model fit as a starting point.}
-            \item{\code{hard}: begin with observations hard-clustered according to the \code{init_class} parameter.}
-            \item{\code{soft}: begin with observations soft-clustered according to the \code{init_class} parameter.}
+            \item{\code{given}: initialization manually specified in \code{init_z} argument}
+            \item{\code{supervised}: Observations with known class labels are assigned to their known component with probability 1, while unlabelled components are initialized with equal prior probability of membership for each component}
         }
         See Details for more information.
     }
-    \item{init_class}{Used when \code{init_method} is set to \code{hard} or \code{soft} to manually prescribe initial classification for the AECM algorithm. If \code{init_method=hard}, a list of vectors of the same length as \code{rG}. Each vector should have length equal to the number of observations. In this case, the elements of the vector must be numbers in \code{{1,2,...,G}}, where \eqn{G} is the number of groups. If \code{init_method=hard}, a list of row-stochastic matrices of same length as \code{rG}. These matrices have number of rows equal to the number of observations, and number of columns correspoding to the values in \code{rG}.}
+    \item{init_z}{Used when \code{init_method} is set to \code{given} to manually prescribe the initialization used by the AECM algorithm. A list of row-stochastic matrices of same length as \code{rG}, where \eqn{z[i,g]} represents the prior probability that observation \eqn{i} is a member of group \eqn{g}.}
     \item{max_it}{The maximum number of iterations for the AECM algorithm.}
     \item{tol}{The tolerance for the Aitken acceleration stopping criterion.}
     \item{alpha_min}{The minimum allowable value for alpha, which represents the proportion of ``good'' points in a given group.}
     \item{eta_max}{The maximum allowable value for eta, which is the covariance inflation factor for outlying points.}
-    \item{scale}{If TRUE, the data is scaled before the algorithm is begun. Reccomended.}
+    \item{scale}{If TRUE, the data is scaled before the algorithm is begun. Recommended.}
     \item{parallel}{If TRUE, computation takes place in parallel on several processors.}
     \item{cores}{Only relevent if \code{parallel=TRUE}. Determines the number of cores used in parallel computation. If left undefined, number of available cores is determined automatically.}
     \item{silent}{If TRUE, function will not print any output at completion.}
+    \item{ememargs}{A list used to set options for the emEM initialization method:
+      \itemize{
+        \item{\code{numstart}: The number of random starting values}
+        \item{\code{iterations}: The number of AECM iterations applied to each starting value}
+        \item{\code{model}: The covariance model used in the emEM iterations}
+        \item{\code{q}: The number of latent factors used in the emEM iterations}
+      }
+    }
 }
 
 \details{
@@ -43,33 +51,49 @@ mcgfa(X, rG=1:3, rq=1:3, models="all", known=NULL, init_method="kmeans",
 
     Besides clustering into components, this algorithm also automatically detects outliers through the use of the contaminated Gaussian distribution. So, in the end each observation is classified in a nested fashion: first into components, then into as inliers/outliers.
 
-    To specify an individual MCGFA model, one must determine: the number of components (\eqn{G}), the number of latent factors (\eqn{q}), and the model name. The model name is one of the following eight:
+    To specify an individual MCGFA model, one must determine: the number of components (\eqn{G}), the number of latent factors (\eqn{q}), and the model name. The model name is one of the following thirty-two options:
     \itemize{
-    \item{\{CCC, CCU, CUC, CUU, UCC, UCU, UUC, UUU\}}
+    \item{CCCCC, CCUCC, CUCCC, CUUCC, UCCCC, UCUCC, UUCCC, UUUCC \cr
+CCCCU, CCUCU, CUCCU, CUUCU, UCCCU, UCUCU, UUCCU, UUUCU \cr
+CCCUC, CCUUC, CUCUC, CUUUC, UCCUC, UCUUC, UUCUC, UUUUC \cr
+CCCUU, CCUUU, CUCUU, CUUUU, UCCUU, UCUUU, UUCUU, UUUUU}
     }
-    Explaination of the model names can be found in the next subsection.
+    
+    Explanation of the model naming scheme can be found in the next subsection, as well as instructions on how to conveniently generate of subset of the full set of models.
 
-    The user may choose to fit a single model. However, usually many models are fit to the same data, and a model selection criterion is used to determine the best one. By entering ranges for the \code{rG}, \code{rq} and \code{models} parameters, many models can be fit at once. The \code{mcgfa} function then selects the best model according to the Bayesian Information Criterion (BIC).
+    The user may choose to fit a single model. However, usually many models are fit to the same data, and a model selection criterion is used to determine the best one. By multiple values for the \code{rG}, \code{rq} and \code{models} parameters, many models can be fit at once. The \code{mcgfa} function then selects the best model according to the Bayesian Information Criterion (BIC).
 
     When fitting many models to large data, parallel computation may be employed by \code{mcgfa}, using the \code{parallel} parameter. This parallelization is provided by the \code{mcapply} function from the \code{parallel} package for R.
 
-    \subsection{Model Names & Covariance Constraints}{
-    The model name indicates which covariance constraints are to be imposed on to the covariance structure of the factor analysis model. Because the MCGFA is a mixture of factor analyzers model, the covariance matrix of the \eqn{g}-th group, \eqn{\Sigma_g}, can be decomposed as follows:
+    \subsection{Model Names & Constraints}{
+    The model name indicates which constraints are to be imposed on to the covariance structure of the factor analysis model, and as well as on to the parameters \eqn{\eta} and \eqn{\alpha}.
+    
+    Because the MCGFA is a mixture of factor analyzers model, the covariance matrix of the \eqn{g}-th group, \eqn{\Sigma_g}, can be decomposed as follows:
     \deqn{\Sigma_g = \Lambda_g\Lambda_g' + \Psi_g}
-    where \eqn{\Lambda_g} is a \eqn{p} by \eqn{q} matrix of factor loadings, and \eqn{\Psi_g} is a diagonal matrix that determines the noise variance for each of the \eqn{p} variables. The family of eight models is formed by introducing different sets of constraints on \eqn{\Lambda} and \eqn{\Psi}.
+    where \eqn{\Lambda_g} is a \eqn{p} by \eqn{q} factor loading matrix, and \eqn{\Psi_g} is a diagonal matrix that determines the noise variance for each of the \eqn{p} variables. The family of eight models is formed by introducing different sets of constraints on \eqn{\Lambda} and \eqn{\Psi}.
 
-    The three-letter model names are interpreted as follows. ``C'' indicates that the constraint is imposed, and ``U'' that it is not. The first letter represents constraining \eqn{\Lambda} to be equal across all groups. The second represents constraining \eqn{\Psi} to be equal across all groups. The last letter represents constraining the error variances to be equal \emph{within} groups; that is, isotropic errors.}
+    The five-letter model names are interpreted as follows. ``C'' indicates that the constraint is imposed, and ``U'' that it is not.
+    
+    \enumerate{
+      \item{\eqn{\Lambda} constrained to be equal across groups (\eqn{\Lambda_g = \Lambda})}
+      \item{\eqn{\Psi} constrained to be equal across groups (\eqn{\Psi_g = \Psi})}
+      \item{Error variances constrained to be to be equal \emph{within} groups (\eqn{\Psi_g = I\psi})}
+      \item{\eqn{\alpha} constrained to be equal across groups (\eqn{\alpha_g = \alpha})}
+      \item{\eqn{\eta} constrained to be equal across groups (\eqn{\eta_g = \eta})}
+    }
+    
+    The subset of models to fit is specified in the \code{models} argument as a character vector. For convenience, the user may also use the character 'X' in a model name to indicate a wildcard. For example, \code{'UUUXX'} is equivalent to the set \code{c('UUUCC','UUUCU','UUUUC','UUUUU')}. These wildcards may be combined, so for example \code{c('UUUUU','CCCCX')} is equivalent to \code{c('UUUUU','CCCCU','CCCCC')}. Any duplicate models generated by wildcards will be removed.
+}
 
     \subsection{Initialization Methods}{
-        Because the AECM algorithm cannot guarantee convergence to a global maximum, success of the algorithm in reaching a good fit depends heavily on starting values. Starting values in this case refer to the intitial classification of each observation. This classification may be either ``hard'', in which each observation is assigned to a unique class, or ``soft'', in which each observation is assigned a vector representing the probability of membership in each class.
-
-        The initialization method is specified through the \code{init_method} argument. The default initialization method is \code{kmeans}. \eqn{k}-means is a fast, simple clustering algorithm that returns a hard classification. The second option is \code{pgmm}, which applies the analogous model from the \code{pgmm} package as a starting point. \code{pgmm} is the model that \code{mcgfa} extends, and is similar except that it lacks the capacity to account for and detect outliers. This method begins with a soft classification.
-
-        The user may also manually assign initial values by selecting one of the \code{hard} and \code{soft} options for \code{init_method}. Both the \code{hard} and \code{soft} options require \code{init_class} be a list of length equal to that of \code{rG}. The \code{i}-th element of this list presribes the starting values for models with number of groups corresponding to \code{rG[i]}.
-
-        In the \code{hard} case, each element of the \code{init_class} list must be a vector of length N, where the \code{i}-th observation indicates the initial membership of observation \code{i}.
-
-        In the \code{soft} case, each element of the \code{init_class} list must a matrix with N rows and number of columns corresponding the matching value of \code{rG}. The (i,j)-th element of each matrix indicates the initial probability that observation \code{i} lies in class \code{j}.
+        Because the AECM algorithm cannot guarantee convergence to a global maximum, success of the algorithm in reaching a good fit depends heavily on starting values. Starting values in this case refer to the prior probability of class membership for each observation. This is represented in an \eqn{n}-by-\eqn{G} stochastic matrix \eqn{z}, where \eqn{n} is the number of observations and G is the number of components. The element \eqn{z[i,j]} indicates the prior probability that observation \eqn{i} lies in group \eqn{G}. Several different options are provided for the generation of this initialization matrix, through the \code{init_method} argument.
+        
+        The default initialization method is \code{emEM}. In this case, several candidates for initial classification matrices are generated, and then the AECM algorithm is applied to each for a small number of iterations. Whichever candidate achieves the best BIC value is selected as the initialization for the full AECM runs. This process occurs separately for each value of \eqn{G}, but only using one parsimonious model and one value of \eqn{q}. The number of candidates, number of iterations, parsimonious model and \eqn{q} used for the emEM initialization can be specified in the \code{ememargs} argument. Options for the emEM initialization can be provided in the \code{ememargs} argument.
+        
+        The second option is \code{kmeans}, which uses the \eqn{k}-means clustering method to generate a ``hard'' initial classification. \eqn{k}-means is a fast, simple clustering algorithm that returns a hard classification.
+        
+        Finally, using the \code{given} option, the user may provide a specific initialization matrix for each value of \code{G} in \code{rG}. The initialization is provided in the \code{init_z} argument. That argument must be a list of the same length as \code{rG}, where each element is a matrix with N rows and number of columns corresponding the matching value of \code{rG}. The \eqn{[i,j]-th} element of each matrix indicates the initial probability that observation \eqn{i} lies in class \eqn{j}.
+        
     }
 
     \subsection{Classification}{
@@ -101,6 +125,7 @@ mcgfa(X, rG=1:3, rq=1:3, models="all", known=NULL, init_method="kmeans",
     \item{sigma}{The covariance matrices of each group, for the best model.}
     \item{npar}{The total number of free parameters in the best model.}
     \item{iterations}{The number of iterations of the AECM algorithm performed, for the fitting of the best model.}
+    \item{init_z}{The initial z matrix used for initialization of the AECM algorithm, for each value of G in rG.}
 }
 
 \references{
@@ -113,24 +138,26 @@ Punzo, A. and McNicholas, P. D. (2014). Robust high-dimensional modeling with th
 # TOY EXAMPLE: 2 GAUSSIAN COMPONENTS WITH NOISE
 # small example for easy visualization
 data(gaussnoise)
-toy_classes = gaussnoise[,1]
-is_noise = gaussnoise[,2]
-X = gaussnoise[,-c(1,2)]
+toy_classes <- gaussnoise[,1]
+is_noise <- gaussnoise[,2]
+X <- gaussnoise[,-c(1,2)]
 
-toy_fit = mcgfa(X, rG=1:3, rq=1:2)
+set.seed(1)
+toy_fit <- mcgfa(X, rG=1:3, rq=1)
 # plot: outliers => triangle
 plot(toy_fit)
 # check clustering performance: 2 errors
 table(toy_classes[1:175],toy_fit$group[1:175])
-# check noise detection performance: 2 false pos, 3 false neg
+# check noise detection performance: 2 false positive, 3 false negative
 table(is_noise,toy_fit$isBad)
 
 # REAL DATA EXAMPLE: WINE DATA
 data(wine)
 # simulate clustering by completely hiding known classes from algorithm
-X = wine[,-1]
-wine_classes = wine[,1]
-wine_fit = mcgfa(X,rG=1:3,rq=1:4)
+X <- wine[,-1]
+wine_classes <- wine[,1]
+set.seed(1)
+wine_fit <- mcgfa(X, rG=1:3, rq=1:4)
 
 # check performance:
 #  - correctly selected 3 groups
@@ -141,27 +168,36 @@ table(wine_classes,wine_fit$group)
 
 # load data
 data(olive)
-X = olive[,-c(1,2)]
+X <- olive[,-c(1,2)]
 # classes correspond to regions of Italy
-regions = olive[,1]
+regions <- olive[,1]
 
-# take fifth of observations to form training data
+# take eighth of observations to form training data
 set.seed(1)
-train_ind = sample.int(nrow(X),nrow(X)/5)
+train_ind <- sample.int(nrow(X),nrow(X)/8)
 
-known = rep(0,nrow(X))
-known[train_ind] = regions[train_ind]
+known <- rep(0,nrow(X))
+known[train_ind] <- regions[train_ind]
 
-# FULL SUPERVISION (test set completely hidden from classifier)
-fit = mcgfa(X[train_ind,],rq=3:4,rG=3)
-pred = predict(fit,X[-train_ind,])
-# check classification performace: mass confusion
+# FULL SUPERVISION (only labelled data available to classifier)
+# In this case, the model is formed using only the 71 labelled
+# observations. Then this model is used to predict the class
+# membership of the remaining 501 observations.
+fit <- mcgfa(X[train_ind,], rq = 3:4, rG = 3)
+pred <- predict(fit,X[-train_ind,])
+# check classification performance: poor separation
 table(regions[-train_ind],pred$hard)
 
 # PARTIAL SUPERVISION (unlabelled data available to classifier)
-fit2 = mcgfa(X,rq=3:4,rG=3,known=known)
-# check classification performace: only 13 errors (2\% misclassification)
+# In this case, the model is formed using the 71 labelled 
+# observations, as well the the 501 unlabelled observations.
+# As a part of this initial model fit, class predictions for the
+# unlabelled observations are automatically generated.
+fit2 <- mcgfa(X,rq=3:4,rG=3,known=known)
+# check classification performance: extremely good, only 1 error
 table(regions[-train_ind],fit2$group[-train_ind])
+# This shows that the use of the  unlabelled observations during
+# model fitting can significantly improve classification performance.
 }
 }
 
