@@ -1,5 +1,5 @@
 Package: mcgfa
-Version: 2.2.0
+Version: 2.2.1
 Type: Package
 Title: Mixtures of Contaminated Gaussian Factor Analyzers
 Authors@R: c(person("Martin", "Blostein", role = c("aut", "cre"), email="martin.blostein@gmail.com"),
@@ -12,8 +12,8 @@ LazyData: TRUE
 NeedsCompilation: yes
 Packaged: 2016-10-02 17:09:38 UTC; martin
 Author: Martin Blostein [aut, cre],
-  Antonio Punzo [ctb],
-  Paul D. McNicholas [ctb, ths]
+  Antonio Punzo [aut],
+  Paul D. McNicholas [aut, ths]
 Maintainer: Martin Blostein <martin.blostein@gmail.com>
 Repository: CRAN
 Date/Publication: 2016-10-02 22:52:42
