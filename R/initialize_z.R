@@ -1,15 +1,15 @@
-initialize_z_list <- function(init_method, N, x, rG, init_z, ememargs) {
+initialize_z_list <- function(init_method, N, x, rG, init_z, ememargs, known) {
     
     if (init_method == "given") {
         return(init_z)
     } 
     
     lapply(seq_along(rG), function(i) {
-        initialize_z(init_method, N, x, rG[[i]], init_z[[i]], ememargs)
+        initialize_z(init_method, N, x, rG[[i]], init_z[[i]], ememargs, known)
     })
 }
 
-initialize_z <- function(init_method, N, x, G, init_z, ememargs) {
+initialize_z <- function(init_method, N, x, G, init_z, ememargs, known) {
     
     if (G == 1) {
         return(matrix(rep(1, N), N, 1))
@@ -24,7 +24,7 @@ initialize_z <- function(init_method, N, x, G, init_z, ememargs) {
         })
         
         bic <- sapply(ii, function(i) {
-            mcgfa:::mcgfa_EM(x, G = G, q = ememargs$q, model = ememargs$model, z = z_candidates[[i]], max_it = 5)$bic  
+            mcgfa_EM(x, G = G, q = ememargs$q, model = ememargs$model, z = z_candidates[[i]], max_it = 5)$bic  
         })
         
         z <- z_candidates[[which.max(bic)]]

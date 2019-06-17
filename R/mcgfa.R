@@ -164,7 +164,7 @@ mcgfa <- function(
     # ----- INITIALIZATION ------ #
     # --------------------------- #
     
-    z_list <- initialize_z_list(init_method, N, X, rG, init_z, ememargs)
+    z_list <- initialize_z_list(init_method, N, X, rG, init_z, ememargs, known)
 
     # --------------------------- #
     # CALL MODEL FITTING FUNCTION #
