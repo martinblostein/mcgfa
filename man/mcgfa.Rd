@@ -5,9 +5,10 @@
 \description{Performs clustering and classification using the Mixtures of Contaminated Gaussian Factor Analyzers model. This model allows for automatic detection of outliers and noise, and automatically detects outliers. It is appropriate for high-dimensional numerical data.}
 
 \usage{
-mcgfa(X, rG=1:3, rq=1:3, models="all", known=NULL, init_method="kmeans",
-      init_class=NULL, max_it=400, tol=1e-3, alpha_min=0.5, eta_max=1000,
-      scale=T, parallel=F, cores=NULL, silent=F)
+mcgfa(X, rG=1:3, rq=1:3, models="all", known=NULL, init_method="emEM",
+      init_z, max_it=400, tol=1e-3, alpha_min=0.5, eta_max=1000,
+      scale=T, parallel=F, cores=NULL, silent=F, ememargs = 
+      list(numstart = 25, iterations = 5, model = "UUUUU", q = max(rq)))
 }
 
 \arguments{
@@ -47,7 +48,7 @@ mcgfa(X, rG=1:3, rq=1:3, models="all", known=NULL, init_method="kmeans",
 
 \details{
 
-    This function implements the Mixtures of Contaminated Gaussian Factor Analyzers (MCGFA) model, for model-based clustering and classification. The algorithm is meant to be applied on on high-dimensional, and noisy, data. A description of the model can be found in Punzo and McNicholas (2014). Parameter estimation is performed using an Alternating Expectation-Conditional Maximization (AECM) algorithm (Meng and Van Dyk, 1997).
+    This function implements the Mixtures of Contaminated Gaussian Factor Analyzers (MCGFA) model, for model-based clustering and classification. The approach is meant to be applied on on high-dimensional, and noisy, data. A description of the model can be found in Punzo, Blostein and McNicholas (2017). Parameter estimation is performed using an Alternating Expectation-Conditional Maximization (AECM) algorithm (Meng and Van Dyk, 1997).
 
     Besides clustering into components, this algorithm also automatically detects outliers through the use of the contaminated Gaussian distribution. So, in the end each observation is classified in a nested fashion: first into components, then into as inliers/outliers.
 
@@ -130,7 +131,7 @@ CCCUU, CCUUU, CUCUU, CUUUU, UCCUU, UCUUU, UUCUU, UUUUU}
 
 \references{
 Meng, X.-L. and Van Dyk, D. (1997). The EM Algorithm - An old folksong sung to a fast new tune. \emph{Journal of the Royal Statistical Society: Series B (Statistical Methodology)}, \bold{59(3)}, 511-567.
-Punzo, A. and McNicholas, P. D. (2014). Robust high-dimensional modeling with the contamined Gaussian distribution. \emph{arXiv preprint arXiv:1408.2128v1.}
+Punzo, A., Blostein, M. and McNicholas, P. D. (2017). High-dimensional clustering with the contaminated Gaussian distribution \emph{arXiv preprint arXiv:1408.2128v2.}
 }
 
 \examples{
