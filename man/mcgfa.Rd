@@ -135,7 +135,7 @@ Punzo, A., Blostein, M. and McNicholas, P. D. (2017). High-dimensional clusterin
 }
 
 \examples{
-\dontrun{
+
 # TOY EXAMPLE: 2 GAUSSIAN COMPONENTS WITH NOISE
 # small example for easy visualization
 data(gaussnoise)
@@ -144,7 +144,7 @@ is_noise <- gaussnoise[,2]
 X <- gaussnoise[,-c(1,2)]
 
 set.seed(1)
-toy_fit <- mcgfa(X, rG=1:3, rq=1)
+toy_fit <- mcgfa(X, rG=1:3, rq=1, models="XXXCC")
 # plot: outliers => triangle
 plot(toy_fit)
 # check clustering performance: 2 errors
@@ -152,6 +152,7 @@ table(toy_classes[1:175],toy_fit$group[1:175])
 # check noise detection performance: 2 false positive, 3 false negative
 table(is_noise,toy_fit$isBad)
 
+\donttest{
 # REAL DATA EXAMPLE: WINE DATA
 data(wine)
 # simulate clustering by completely hiding known classes from algorithm
