@@ -55,10 +55,10 @@ mcgfa <- function(
     }
 
     # check rG and rq
-    if (!all((rG %% 1 == 0) && (rG > 0))) {
+    if (!all((rG %% 1 == 0) & (rG > 0))) {
         stop ("Only positive integer numbers of components are possible (rG).")
     }
-    if (!all((rq %% 1 == 0) && (rq > 0))) {
+    if (!all((rq %% 1 == 0) & (rq > 0))) {
         stop ("Only postive integer numbers of latent factors are possible (rq).")
     }
     if (any(duplicated(rG))) {
