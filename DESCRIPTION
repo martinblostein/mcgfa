@@ -1,19 +1,18 @@
 Package: mcgfa
-Version: 2.2.1
+Version: 2.2.2
+Date: 2021-01-19
 Type: Package
 Title: Mixtures of Contaminated Gaussian Factor Analyzers
-Authors@R: c(person("Martin", "Blostein", role = c("aut", "cre"), email="martin.blostein@gmail.com"),
+Authors@R: c(person("Martin", "Blostein", role = c("aut")),
              person("Antonio", "Punzo", role = "aut"),
-             person(c("Paul", "D."), "McNicholas", role = c("aut","ths")))
-Description: Clustering and classification using the Mixtures of Contaminated Gaussian Factor Analyzers model. Allows for automatic detection of outliers and noise. Punzo, A, Blostein, M, McNicholas, PD (2017) <arXiv:1408.2128v2>.
+             person(c("Paul", "D."), "McNicholas", role = c("aut","ths","cre"), 
+             email="mcnicholas@math.mcmaster.ca"))
+Author: Martin Blostein [aut], Antonio Punzo [aut], Paul D. McNicholas [aut, ths, cre]
+Description: Clustering and classification using the mixtures of contaminated Gaussian factor analyzers model. Allows for automatic detection of outliers and noise. Punzo, A, Blostein, M, McNicholas, PD (2020) <doi:10.1016/j.patcog.2019.107031>.
 Imports: stats, parallel
 License: GPL (>= 2)
 LazyData: TRUE
 NeedsCompilation: yes
-Packaged: 2016-10-02 17:09:38 UTC; martin
-Author: Martin Blostein [aut, cre],
-  Antonio Punzo [aut],
-  Paul D. McNicholas [aut, ths]
-Maintainer: Martin Blostein <martin.blostein@gmail.com>
+Maintainer: Paul D. McNicholas <mcnicholas@math.mcmaster.ca>
 Repository: CRAN
-Date/Publication: 2016-10-02 22:52:42
+

@@ -4,12 +4,15 @@
 #include<R.h>
 #include "functions.h"
 #ifdef __APPLE__
-#include <Accelerate/Accelerate.h>
+extern void dgemm_(const char *transa, const char *transb, const int *m, 
+                   const int *n, const int *k, const double *alpha, 
+                   const double *a, const int *lda, const double *b, 
+                   const int *ldb, const double *beta, double *c, 
+                   const int *ldc);
 #else
 #include <R_ext/Lapack.h>
 #include <R_ext/BLAS.h>
 #endif
-
 
 void generate_identity(int N, double *matrix){
     int i, j;
